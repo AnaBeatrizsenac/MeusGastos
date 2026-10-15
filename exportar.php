@@ -29,6 +29,8 @@ function csv_seguro(string $t): string
     return preg_match('/^[=+\-@\t\r]/', $t) ? "'" . $t : $t;
 }
 
+/** Evita que planilhas interpretem texto do usuário como fórmula. */
+
 if ($formato === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="meu-dinheiro-' . date('Y-m-d') . '.csv"');
