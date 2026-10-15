@@ -1,0 +1,52 @@
+/* Ajustes de tela pequena (tablet e celular). Carregado depois de style.css. */
+.content, .cartao, .kpi { min-width: 0; }
+.main-wrap { overflow-x: clip; }
+.bottom-nav { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+.topbar { padding-top: max(.65rem, env(safe-area-inset-top)); }
+
+/* tablet (576–991): mais respiro; menu inferior com ícone ao lado do texto */
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .content { padding: 1.5rem 1.6rem 2rem; }
+  .bottom-nav a { font-size: .76rem; flex-direction: row; justify-content: center; gap: .45rem; padding: .85rem 0; }
+  .main-wrap { padding-bottom: 60px; }
+}
+
+/* celular */
+@media (max-width: 575.98px) {
+  .form-control, .form-select { font-size: 16px; } /* evita o zoom automático do iOS ao focar */
+  .btn, .btn-acao, .icon-btn { min-height: 40px; }
+  .btn-acao { min-width: 40px; }
+  .btn-acao-grande { padding: .65rem .3rem; font-size: .85rem; }
+  .kpi { padding: .8rem .85rem; }
+  .kpi strong { font-size: 1.12rem; }
+  .cartao { padding: 1rem; }
+  .seletor-mes span { min-width: 120px; }
+  .grafico-barras { height: 240px; }
+  .auth-card { padding: 1.5rem 1.2rem; }
+  .auth-main { align-items: start; padding-top: 2.5rem; }
+  .hero { padding-top: 2rem; }
+  .secao { padding: 2.5rem 0; }
+  .user-btn .bi-chevron-down { display: none; }
+
+  /* listas viram cartões, sem rolagem lateral */
+  .tabela.empilhavel thead { display: none; }
+  .tabela.empilhavel, .tabela.empilhavel tbody { display: block; }
+  .tabela.empilhavel tr:not(.vazio) {
+    display: grid;
+    grid-template-columns: auto auto 1fr auto;
+    grid-template-areas: 'desc desc desc valor' 'data tipo cat cat' 'acoes acoes acoes acoes';
+    column-gap: .6rem;
+    row-gap: .15rem;
+    padding: .8rem 1rem;
+    border-bottom: 1px solid var(--borda);
+  }
+  .tabela.empilhavel tr:last-child { border-bottom: 0; }
+  .tabela.empilhavel td { display: block; padding: 0; border: 0; }
+  .tabela.empilhavel .c-desc { grid-area: desc; font-weight: 500; }
+  .tabela.empilhavel .c-valor { grid-area: valor; }
+  .tabela.empilhavel .c-data { grid-area: data; }
+  .tabela.empilhavel .c-tipo { grid-area: tipo; }
+  .tabela.empilhavel .c-cat { grid-area: cat; }
+  .tabela.empilhavel .c-data, .tabela.empilhavel .c-cat { font-size: .8rem; color: var(--mudo); align-self: center; }
+  .tabela.empilhavel .c-acoes { grid-area: acoes; text-align: right; margin-top: .2rem; }
+}

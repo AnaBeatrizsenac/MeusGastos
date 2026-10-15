@@ -1,0 +1,12 @@
+{
+  "name": "Meu Dinheiro",
+  "short_name": "Meu Dinheiro",
+  "description": "Controle financeiro para estudantes",
+  "start_url": "dashboard.php",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f4f1e8",
+  "theme_color": "#17402b",
+  "lang": "pt-BR",
+  "icons": [{ "src": "assets/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
