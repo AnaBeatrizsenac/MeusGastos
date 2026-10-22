@@ -70,6 +70,14 @@ CREATE TABLE IF NOT EXISTS recuperacoes (
   CONSTRAINT fk_rec_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS rate_limits (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  chave       VARCHAR(100) NOT NULL,
+  criado_em   INT UNSIGNED NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_rate_chave (chave, criado_em)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 INSERT IGNORE INTO categorias (nome, icone, cor, tipo) VALUES
   ('Alimentação', '🍔', '#16a34a', 'gasto'),
   ('Transporte',  '🚌', '#2563eb', 'gasto'),

@@ -51,6 +51,34 @@
   });
   $$('input[name=tema_opcao]').forEach((r) => r.addEventListener('change', () => salvarTema(r.value)));
 
+  /* ---- banner de cookies (LGPD) ---- */
+  const bannerCookies = document.getElementById('bannerCookies');
+  if (bannerCookies) {
+    let aceito = false;
+    try {
+      aceito = localStorage.getItem('md_cookie_consent') === '1';
+    } catch (e) {
+      aceito = false;
+    }
+    if (!aceito) {
+      bannerCookies.style.display = 'block';
+    }
+    const btnAceitar = document.getElementById('btnAceitarCookies');
+    if (btnAceitar) {
+      btnAceitar.addEventListener('click', () => {
+        try {
+          localStorage.setItem('md_cookie_consent', '1');
+        } catch (e) {}
+        bannerCookies.style.transition = 'opacity .25s ease, transform .25s ease';
+        bannerCookies.style.opacity = '0';
+        bannerCookies.style.transform = 'translateY(15px)';
+        setTimeout(() => {
+          bannerCookies.style.display = 'none';
+        }, 260);
+      });
+    }
+  }
+
   /* ---- mostrar/ocultar senha ---- */
   $$('.ver-senha').forEach((b) => b.addEventListener('click', () => {
     const inp = b.parentElement.querySelector('input');

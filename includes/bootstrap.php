@@ -8,7 +8,17 @@ ini_set('session.use_strict_mode', '1');
 ini_set('session.cookie_httponly', '1');
 ini_set('session.cookie_samesite', 'Lax');
 ini_set('session.gc_maxlifetime', (string) (30 * 86400));
+if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    ini_set('session.cookie_secure', '1');
+}
 session_start();
+
+/* Cabeçalhos de Proteção HTTP (Hardening DAST / Anti-Exfiltração) */
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: geolocation=(), camera=(), microphone=()');
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self';");
 
 function pdo(): PDO
 {
@@ -144,6 +154,68 @@ function csrf_campo(): string
 function csrf_ok(?string $t): bool
 {
     return is_string($t) && $t !== '' && hash_equals($_SESSION['csrf'] ?? '', $t);
+}
+
+/* ---------- rate limit e anti-brute-force ---------- */
+
+function ip_cliente(): string
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '127.0.0.1';
+}
+
+function garantir_tabela_rate_limits(): void
+{
+    static $garantido = false;
+    if ($garantido) {
+        return;
+    }
+    try {
+        pdo()->exec(
+            "CREATE TABLE IF NOT EXISTS rate_limits (
+               id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+               chave VARCHAR(100) NOT NULL,
+               criado_em INT UNSIGNED NOT NULL,
+               PRIMARY KEY (id),
+               KEY idx_rate_chave (chave, criado_em)
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+        );
+        $garantido = true;
+    } catch (Throwable $e) {}
+}
+
+function rate_limit_atingido(string $chave, int $maxTentativas, int $janelaSegundos): bool
+{
+    garantir_tabela_rate_limits();
+    $agora = time();
+    $limite = $agora - $janelaSegundos;
+    $pdo = pdo();
+    try {
+        if (random_int(1, 20) === 1) {
+            $pdo->prepare('DELETE FROM rate_limits WHERE criado_em < ?')->execute([$agora - 86400]);
+        }
+        $st = $pdo->prepare('SELECT COUNT(*) FROM rate_limits WHERE chave = ? AND criado_em > ?');
+        $st->execute([$chave, $limite]);
+        return (int) $st->fetchColumn() >= $maxTentativas;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
+function rate_limit_registrar(string $chave): void
+{
+    garantir_tabela_rate_limits();
+    try {
+        pdo()->prepare('INSERT INTO rate_limits (chave, criado_em) VALUES (?, ?)')->execute([$chave, time()]);
+    } catch (Throwable $e) {}
+}
+
+function rate_limit_limpar(string $chave): void
+{
+    garantir_tabela_rate_limits();
+    try {
+        pdo()->prepare('DELETE FROM rate_limits WHERE chave = ?')->execute([$chave]);
+    } catch (Throwable $e) {}
 }
 
 /* ---------- autenticação ---------- */

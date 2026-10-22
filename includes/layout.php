@@ -13,6 +13,34 @@ function logo_svg(int $t = 36): string
         . '<path d="M24 14c0-7 7-10 14-8-1 7-7 10-14 8z" fill="#16a34a"/></svg>';
 }
 
+function banner_cookies_html(): void
+{
+    ?>
+<div id="bannerCookies" class="cookie-banner" style="display:none;" role="region" aria-label="Consentimento de Cookies">
+  <div class="cookie-banner-box">
+    <div class="cookie-banner-icon">
+      <i class="bi bi-shield-check"></i>
+    </div>
+    <div class="cookie-banner-info">
+      <strong>Privacidade e Cookies Essenciais</strong>
+      <p class="mb-2 text-muted small">
+        Utilizamos cookies de sessão (para manter seu login seguro) e salvamento local para lembrar sua preferência de Tema Escuro ou Claro. Não utilizamos cookies de rastreamento publicitário nem compartilhamos seus dados com terceiros.
+      </p>
+      <div class="cookie-banner-links small">
+        <a href="privacidade.php" target="_blank" class="fw-semibold text-decoration-underline me-3">Política de Privacidade</a>
+        <a href="termos.php" target="_blank" class="fw-semibold text-decoration-underline">Termos de Uso</a>
+      </div>
+    </div>
+    <div class="cookie-banner-actions">
+      <button type="button" id="btnAceitarCookies" class="btn btn-sm btn-md-primary px-3 py-2">
+        Entendi e aceito
+      </button>
+    </div>
+  </div>
+</div>
+    <?php
+}
+
 function layout_topo(string $titulo, string $ativo): void
 {
     $u = usuario_atual();
@@ -114,7 +142,7 @@ function layout_fim(array $scripts = []): void
     <a href="<?= $href ?>" class="<?= $GLOBALS['nav_ativo'] === $k ? 'active' : '' ?>"><i class="bi <?= $ico ?>"></i><span><?= $txt ?></span></a>
   <?php endforeach; ?>
 </nav>
-
+<?php banner_cookies_html(); ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/app.js"></script>
 <?php foreach ($scripts as $s): ?><script src="<?= e($s) ?>"></script><?php endforeach; ?>

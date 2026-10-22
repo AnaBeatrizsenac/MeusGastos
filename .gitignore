@@ -1,2 +1,4 @@
 config/config.local.php
 config/mail.local.php
+config/instalado.lock
+

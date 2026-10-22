@@ -11,8 +11,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $senha = (string) ($_POST['senha'] ?? '');
     $conf = (string) ($_POST['confirmar'] ?? '');
 
+    $ip = ip_cliente();
+    $chaveCad = 'cad_ip_' . $ip;
+
     if (!csrf_ok($_POST['csrf'] ?? null)) {
         $erros[] = 'Requisição inválida. Tente novamente.';
+    } elseif (rate_limit_atingido($chaveCad, 5, 3600)) {
+        $erros[] = 'Limite de cadastros excedido para o seu endereço IP. Tente novamente mais tarde.';
     }
     if (mb_strlen($nome) < 2 || mb_strlen($nome) > 100) {
         $erros[] = 'Informe seu nome (2 a 100 caracteres).';
@@ -28,6 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($senha !== $conf) {
         $erros[] = 'A confirmação de senha não confere.';
     }
+    if (empty($_POST['termos'])) {
+        $erros[] = 'Você precisa concordar com os Termos de Uso e a Política de Privacidade.';
+    }
     if (!$erros) {
         $st = pdo()->prepare('SELECT COUNT(*) FROM usuarios WHERE email = ?');
         $st->execute([$email]);
@@ -38,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$erros) {
         pdo()->prepare('INSERT INTO usuarios (nome, email, senha_hash) VALUES (?,?,?)')
             ->execute([$nome, $email, password_hash($senha, PASSWORD_DEFAULT)]);
+        rate_limit_registrar($chaveCad);
         redirect('login.php?cadastrado=1');
     }
 }
@@ -61,6 +70,12 @@ publico_topo('Criar conta', 'auth');
         <div class="input-icone mb-3"><i class="bi bi-lock"></i><input type="password" name="senha" class="form-control" placeholder="Senha (mín. 8, com letras e números)" required autocomplete="new-password">
           <button type="button" class="ver-senha" aria-label="Mostrar senha"><i class="bi bi-eye"></i></button></div>
         <div class="input-icone mb-3"><i class="bi bi-lock-fill"></i><input type="password" name="confirmar" class="form-control" placeholder="Confirmar senha" required autocomplete="new-password"></div>
+        <div class="form-check mb-3 text-start small">
+          <input class="form-check-input" type="checkbox" name="termos" id="termos" value="1" required <?= !empty($_POST['termos']) ? 'checked' : '' ?>>
+          <label class="form-check-label text-muted" for="termos">
+            Li e concordo com os <a href="termos.php" target="_blank" class="fw-semibold text-decoration-underline">Termos de Uso</a> e a <a href="privacidade.php" target="_blank" class="fw-semibold text-decoration-underline">Política de Privacidade</a>.
+          </label>
+        </div>
         <button class="btn btn-md-primary w-100 py-2">Criar conta</button>
       </form>
       <p class="text-center small mt-4 mb-0">Já tem conta? <a href="login.php" class="fw-bold">Entrar</a></p>

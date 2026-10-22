@@ -3,17 +3,26 @@ require __DIR__ . '/includes/bootstrap.php';
 require __DIR__ . '/includes/publico.php';
 
 $arquivoLocal = __DIR__ . '/config/config.local.php';
+$arquivoLock = __DIR__ . '/config/instalado.lock';
 
-/** Já instalado e funcionando? Então a tela fica bloqueada. */
-function instalacao_funcionando(): bool
+/** Já instalado e funcionando? Então a tela fica bloqueada permanentemente. */
+function instalacao_bloqueada(string $arquivoLock): bool
 {
-    try {
-        return (bool) pdo()->query("SHOW TABLES LIKE 'usuarios'")->fetchColumn();
-    } catch (Throwable $e) {
-        return false;
+    if (file_exists($arquivoLock)) {
+        return true;
     }
+    try {
+        if ((bool) pdo()->query("SHOW TABLES LIKE 'usuarios'")->fetchColumn()) {
+            @file_put_contents($arquivoLock, date('c'));
+            return true;
+        }
+    } catch (Throwable $e) {
+        // Se o banco estiver temporariamente indisponível mas a instalação já foi feita
+    }
+    return false;
 }
-if (instalacao_funcionando()) {
+
+if (instalacao_bloqueada($arquivoLock)) {
     redirect('index.php');
 }
 
@@ -62,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (file_put_contents($arquivoLocal, $conteudo, LOCK_EX) === false) {
                 throw new RuntimeException('Não foi possível gravar config/config.local.php. Verifique as permissões da pasta config.');
             }
+            @file_put_contents($arquivoLock, date('c'));
             $_SESSION['db_ok'] = true;
             flash('success', 'Instalação concluída! Crie sua conta para começar.');
             redirect('cadastro.php');

@@ -74,5 +74,5 @@ publico_topo('Organize suas finanças', 'landing');
     </ol>
   </div>
 </section>
-<footer class="text-center small text-muted py-4">Meu Dinheiro · projeto acadêmico de controle financeiro para estudantes</footer>
+<footer class="text-center small text-muted py-4">Meu Dinheiro · projeto acadêmico de controle financeiro para estudantes · <a href="termos.php" class="text-muted text-decoration-underline">Termos de Uso</a> · <a href="privacidade.php" class="text-muted text-decoration-underline">Política de Privacidade</a></footer>
 <?php publico_fim(); ?>

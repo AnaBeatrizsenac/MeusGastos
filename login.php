@@ -8,26 +8,31 @@ $email = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     $senha = (string) ($_POST['senha'] ?? '');
-    $agora = time();
-    $bloqueadoAte = $_SESSION['login_bloqueio'] ?? 0;
+    $ip = ip_cliente();
+    $chaveIp = 'log_ip_' . $ip;
+    $chaveUser = $email !== '' ? 'log_usr_' . hash('sha256', $email) : '';
 
     if (!csrf_ok($_POST['csrf'] ?? null)) {
         $erro = 'Requisição inválida. Tente novamente.';
-    } elseif ($bloqueadoAte > $agora) {
-        $erro = 'Muitas tentativas. Aguarde ' . ($bloqueadoAte - $agora) . ' segundos.';
+    } elseif (rate_limit_atingido($chaveIp, 8, 300)) {
+        $erro = 'Muitas tentativas a partir deste endereço IP. Aguarde 5 minutos.';
+    } elseif ($chaveUser !== '' && rate_limit_atingido($chaveUser, 5, 300)) {
+        $erro = 'Muitas tentativas para esta conta. Aguarde 5 minutos por segurança.';
     } else {
         $st = pdo()->prepare('SELECT id, senha_hash FROM usuarios WHERE email = ?');
         $st->execute([$email]);
         $u = $st->fetch();
         if ($u && password_verify($senha, $u['senha_hash'])) {
-            unset($_SESSION['login_falhas'], $_SESSION['login_bloqueio']);
+            rate_limit_limpar($chaveIp);
+            if ($chaveUser !== '') {
+                rate_limit_limpar($chaveUser);
+            }
             iniciar_sessao((int) $u['id'], !empty($_POST['lembrar']));
             redirect('dashboard.php');
         }
-        $_SESSION['login_falhas'] = ($_SESSION['login_falhas'] ?? 0) + 1;
-        if ($_SESSION['login_falhas'] >= 5) {
-            $_SESSION['login_bloqueio'] = $agora + 60;
-            $_SESSION['login_falhas'] = 0;
+        rate_limit_registrar($chaveIp);
+        if ($chaveUser !== '') {
+            rate_limit_registrar($chaveUser);
         }
         $erro = 'E-mail ou senha incorretos.';
     }

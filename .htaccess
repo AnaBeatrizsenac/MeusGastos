@@ -1,0 +1,23 @@
+# Meu Dinheiro — Diretivas de Segurança e Proteção de Servidor
+
+# 1. Impede a listagem de arquivos nos diretórios
+Options -Indexes
+
+# 2. Bloqueia acesso direto a arquivos ocultos, de sistema, logs, schemas e backups
+<FilesMatch "(^\.|\.(lock|sql|md|json|yml|yaml|ini|log|bak|config)$|config\.php|bootstrap\.php)">
+    Require all denied
+</FilesMatch>
+
+# 3. Proteção contra Injeção de Comandos e Caracteres Maliciosos na URL
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{QUERY_STRING} (environ|union.*select|insert.*into|load_file|outfile|base64_) [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# 4. Cabeçalhos de Segurança no nível do Apache
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

@@ -6,6 +6,13 @@ exigir_login();
 const LIMITE_EXPORTACAO = 5000;
 
 $uid = usuario_id();
+$chaveExport = 'exp_' . $uid;
+if (rate_limit_atingido($chaveExport, 20, 60)) {
+    http_response_code(429);
+    exit('Muitas solicitações de exportação. Aguarde 1 minuto para tentar novamente.');
+}
+rate_limit_registrar($chaveExport);
+
 $u = usuario_atual();
 $formato = ($_GET['formato'] ?? 'csv') === 'pdf' ? 'pdf' : 'csv';
 [$W, $par, $fv] = filtros_movimentacao($uid, $_GET);
@@ -28,8 +35,6 @@ function csv_seguro(string $t): string
 {
     return preg_match('/^[=+\-@\t\r]/', $t) ? "'" . $t : $t;
 }
-
-/** Evita que planilhas interpretem texto do usuário como fórmula. */
 
 if ($formato === 'csv') {
     header('Content-Type: text/csv; charset=utf-8');
